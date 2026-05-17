@@ -1,0 +1,13 @@
+# Fonts — embedded as base64 in HTML, not needed in repo
+*.otf
+*.ttf
+*.woff
+*.woff2
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
