@@ -123,7 +123,7 @@
   --type-small-size:     16px;
   --type-small-weight:   400;
   --type-small-lh:       1.4;
-  --type-small-spacing:  0.05em;
+  --type-small-spacing:  0.2em;
   --type-small-transform: none;
 
   --type-caption-size:     16px;
@@ -135,7 +135,7 @@
   --type-meta-size:     12px;
   --type-meta-weight:   400;
   --type-meta-lh:       1.4;
-  --type-meta-spacing:  0em;
+  --type-meta-spacing:  0.05em;
   --type-meta-transform: none;
 
   /* ══════════════════════════════════════════════
