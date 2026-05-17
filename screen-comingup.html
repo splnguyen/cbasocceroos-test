@@ -515,8 +515,15 @@ function applyScenario(key) {
 document.getElementById('apply-btn').addEventListener('click', () =>
   applyScenario(document.getElementById('scenario-select').value));
 
-// Boot on single
-applyScenario('single');
+// ── Boot — read ?scenario= URL param if present ──────────────
+// Allows the carousel shell (index.html) to drive which variant loads.
+// Falls back to 'single' when opened standalone.
+const urlParam = new URLSearchParams(window.location.search).get('scenario');
+const bootScenario = (urlParam === 'two' || urlParam === 'single') ? urlParam : 'single';
+applyScenario(bootScenario);
+
+// Keep dev dropdown in sync with whatever booted
+document.getElementById('scenario-select').value = bootScenario;
 </script>
 </body>
 </html>
