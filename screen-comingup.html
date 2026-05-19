@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="typography.css">
 
 <meta name="viewport" content="width=1080">
 <title>Matches Coming Up — FIFA World Cup 2026</title>
@@ -74,11 +75,11 @@ body {
   display:flex; align-items:center; gap:12px; flex-wrap:wrap;
   justify-content:center; max-width:1040px;
 }
-#dev-controls label { color:var(--text-muted); font-size:15px; letter-spacing:1px; text-transform:uppercase; }
-#scenario-select { background:var(--bg-card); color:var(--text-primary); border:1px solid var(--divider-subtle); border-radius:6px; padding:7px 12px; font-size:14px; font-family:'CBABeaconSans',sans-serif; cursor:pointer; }
-#apply-btn { background:color-mix(in srgb, var(--accent-green) 25%, black); color:var(--text-primary); border:1px solid color-mix(in srgb, var(--accent-green) 45%, black); border-radius:6px; padding:7px 18px; font-size:14px; font-family:'CBABeaconSans',sans-serif; cursor:pointer; }
+#dev-controls label { color:var(--text-muted); font-size:var(--type-meta-size); letter-spacing:1px; text-transform:uppercase; }
+#scenario-select { background:var(--bg-card); color:var(--text-primary); border:1px solid var(--divider-subtle); border-radius:6px; padding:7px 12px; font-size:var(--type-meta-size); font-family:'CBABeaconSans',sans-serif; cursor:pointer; }
+#apply-btn { background:color-mix(in srgb, var(--accent-green) 25%, black); color:var(--text-primary); border:1px solid color-mix(in srgb, var(--accent-green) 45%, black); border-radius:6px; padding:7px 18px; font-size:var(--type-meta-size); font-family:'CBABeaconSans',sans-serif; cursor:pointer; }
 #apply-btn:hover { background:color-mix(in srgb, var(--accent-green) 35%, black); }
-.data-note { color:var(--divider-subtle); font-size:12px; text-align:center; width:100%; }
+.data-note { color:var(--divider-subtle); font-size:var(--type-meta-size); text-align:center; width:100%; }
 
 /* ── SCREEN ── */
 .screen {
@@ -95,12 +96,12 @@ body {
   justify-content:space-between;
   flex-shrink:0; margin-bottom:28px;
 }
-.page-title { font-size:88px; font-weight:800; line-height:1.0; color:var(--text-primary); }
+.page-title { font-size:var(--type-page-title-size); font-weight:var(--type-page-title-weight); line-height:1.0; color:var(--text-primary); }
 
 /* updated badge — two variants */
 .updated-badge {
   font-family:'CBABeaconSans',sans-serif;
-  font-size:22px; font-weight:800;
+  font-size:var(--type-event-size); font-weight:var(--type-event-weight);
   padding:10px 20px; border-radius:6px;
   margin-top:8px; flex-shrink:0; white-space:nowrap;
   letter-spacing:0.5px;
@@ -114,24 +115,24 @@ body {
 .divider-mid  { width:100%; height:2px; background:var(--text-primary); flex-shrink:0; margin:40px 0; }
 
 /* ── STAGE LABEL ── */
-.stage-label { font-size:40px; font-weight:800; color:var(--text-primary); padding:18px 0 16px 0; }
+.stage-label { font-size:var(--type-stage-size); font-weight:var(--type-stage-weight); color:var(--text-primary); padding:18px 0 16px 0; }
 
 /* ── LIVE IN ── */
 .livein-section { text-align:center; padding:32px 0 28px 0; flex-shrink:0; }
 .livein-label {
-  font-size:22px; font-weight:800;
+  font-size:var(--type-event-size); font-weight:var(--type-event-weight);
   letter-spacing:5px; text-transform:uppercase;
   color:var(--accent-gold); margin-bottom:4px;
 }
 .countdown-val {
-  font-size:144px; font-weight:800;
-  line-height:0.95; letter-spacing:-4px;
+  font-size:var(--type-countdown-size); font-weight:var(--type-countdown-weight);
+  line-height:0.95; letter-spacing:var(--type-countdown-spacing);
   color:var(--accent-gold);
   transition:all 0.4s ease;
 }
 .kickoff-dt {
-  font-size:24px; font-weight:800;
-  letter-spacing:3px; text-transform:uppercase;
+  font-size:var(--type-standings-size); font-weight:var(--type-standings-weight);
+  letter-spacing:var(--type-standings-spacing); text-transform:uppercase;
   color:var(--accent-gold); margin-top:12px;
 }
 
@@ -165,23 +166,23 @@ body {
 .flag-circle-sm .fallback { font-size:96px; line-height:1; }
 
 .team-name-lg {
-  font-size:44px; font-weight:800;
-  letter-spacing:3px; text-transform:uppercase;
+  font-size:var(--type-team-lg-size); font-weight:var(--type-team-lg-weight);
+  letter-spacing:var(--type-team-lg-spacing); text-transform:uppercase;
   text-align:center; color:var(--text-primary);
 }
 .team-name-sm {
-  font-size:34px; font-weight:800;
-  letter-spacing:3px; text-transform:uppercase;
+  font-size:var(--type-team-sm-size); font-weight:var(--type-team-sm-weight);
+  letter-spacing:var(--type-team-sm-spacing); text-transform:uppercase;
   text-align:center; color:var(--text-primary);
 }
 .vs-txt {
-  font-size:36px; font-weight:800;
-  letter-spacing:3px; color:var(--text-primary);
+  font-size:var(--type-stage-size); font-weight:var(--type-stage-weight);
+  letter-spacing:var(--type-stage-spacing); color:var(--text-primary);
   padding:0 24px; flex-shrink:0;
   padding-bottom:100px; /* vertically centre vs against flag */
 }
 .vs-txt-sm {
-  font-size:28px; font-weight:800;
+  font-size:var(--type-team-sm-size); font-weight:var(--type-team-sm-weight);
   letter-spacing:3px; color:var(--text-primary);
   padding:0 20px; flex-shrink:0;
   padding-bottom:72px;
@@ -189,8 +190,8 @@ body {
 
 /* ── SECOND MATCH SECTION ── */
 .second-match-date {
-  font-size:22px; font-weight:800;
-  letter-spacing:3px; text-transform:uppercase;
+  font-size:var(--type-event-size); font-weight:var(--type-event-weight);
+  letter-spacing:var(--type-event-spacing); text-transform:uppercase;
   color:var(--text-primary); text-align:center;
   padding:0 0 28px 0;
 }
@@ -204,7 +205,7 @@ body {
   flex-shrink:0;
 }
 .standings-header {
-  font-size:20px; font-weight:800;
+  font-size:var(--type-standings-size); font-weight:var(--type-standings-weight);
   letter-spacing:4px; text-transform:uppercase;
   color:var(--text-primary); text-align:center;
   padding:20px 24px 0 24px;
@@ -217,7 +218,7 @@ body {
   display:grid;
   grid-template-columns:48px 1fr 90px 90px 90px 90px 90px;
   padding:10px 24px;
-  font-size:16px; font-weight:800;
+  font-size:var(--type-label-size); font-weight:var(--type-label-weight);
   letter-spacing:2px; text-transform:uppercase;
   color:var(--text-muted);
 }
@@ -250,17 +251,71 @@ body {
 .sr-flag .fallback { font-size:20px; line-height:1; }
 
 .sr-name {
-  font-size:20px; font-weight:800;
-  letter-spacing:1.5px; text-transform:uppercase;
+  font-size:var(--type-standings-size); font-weight:var(--type-standings-weight);
+  letter-spacing:var(--type-standings-spacing); text-transform:uppercase;
   color:var(--text-primary); padding-left:4px;
 }
 .sr-stat {
-  font-size:20px; font-weight:800;
+  font-size:var(--type-standings-size); font-weight:var(--type-standings-weight);
   color:var(--text-primary); text-align:center;
   transition:all 0.4s ease;
 }
 .sr-stat.pts { color:var(--accent-gold); }
 </style>
+<!-- Flag globals — must be plain script (not module) so onerror attrs can access them -->
+<script>
+const FLAG_MAP = {'Algeria':'ALG','Argentina':'ARG','Australia':'AUS','Austria':'AUT','Belgium':'BEL','Bosnia & Herzegovina':'BIH','Bosnia and Herzegovina':'BIH','Brazil':'BRA','Canada':'CAN','Cape Verde':'CPV','Ivory Coast':'CIV','Colombia':'COL','DR Congo':'COD','Croatia':'CRO','Curaçao':'CUW','Curacao':'CUW','Ecuador':'ECU','Egypt':'EGY','England':'ENG','Spain':'ESP','France':'FRA','Germany':'GER','Ghana':'GHA','Haiti':'HAI','Iran':'IRN','Iraq':'IRQ','Japan':'JPN','Jordan':'JOR','South Korea':'KOR','Korea Republic':'KOR','Saudi Arabia':'KSA','Morocco':'MAR','Mexico':'MEX','Netherlands':'NED','New Zealand':'NZL','Norway':'NOR','Panama':'PAN','Paraguay':'PAR','Poland':'POL','Portugal':'POR','Qatar':'QAT','Scotland':'SCO','Senegal':'SEN','South Africa':'RSA','Sweden':'SWE','Switzerland':'SUI','Tunisia':'TUN','Türkiye':'TUR','Turkey':'TUR','United States':'USA','USA':'USA','Uruguay':'URU','Uzbekistan':'UZB','Venezuela':'VEN','Serbia':'SRB','Cameroon':'CMR'};
+const API_FALLBACK = {'POL':'https://media.api-sports.io/football/teams/24.png','SRB':'https://media.api-sports.io/football/teams/14.png','CMR':'https://media.api-sports.io/football/teams/111.png'};
+const FLAG_BASE_SVG = 'flags/SVG/';
+const FLAG_BASE_PNG = 'flags/PNG/';
+
+function getFlagSVG(teamName) {
+  const code = FLAG_MAP[teamName];
+  if (!code) return null;
+  if (API_FALLBACK[code]) return API_FALLBACK[code];
+  return FLAG_BASE_SVG + code + '.svg';
+}
+function getFlagPNG(teamName) {
+  const code = FLAG_MAP[teamName];
+  if (!code) return null;
+  if (API_FALLBACK[code]) return API_FALLBACK[code];
+  return FLAG_BASE_PNG + code + '.png';
+}
+function getFlagAPI(teamName) {
+  const code = FLAG_MAP[teamName];
+  return code && API_FALLBACK[code] ? API_FALLBACK[code] : null;
+}
+
+
+// Called by onerror chains and directly by JS
+function setFlag(imgEl, teamName, apiLogoUrl) {
+  if (!imgEl) return;
+  const svg = getFlagSVG(teamName);
+  const png = getFlagPNG(teamName);
+  const api = apiLogoUrl || getFlagAPI(teamName);
+  if (svg) {
+    imgEl.src = svg;
+    imgEl.onerror = function() {
+      if (png && png !== svg) {
+        imgEl.src = png;
+        imgEl.onerror = function() {
+          if (api) { imgEl.src = api; imgEl.onerror = null; }
+          else { imgEl.style.display='none'; imgEl.onerror=null; }
+        };
+      } else if (api) {
+        imgEl.src = api;
+        imgEl.onerror = null;
+      } else {
+        imgEl.style.display = 'none';
+      }
+    };
+  } else if (api) {
+    imgEl.src = api;
+    imgEl.onerror = null;
+  }
+}
+
+</script>
 </head>
 <body>
 
@@ -397,14 +452,33 @@ function startCountdown(targetUTC) {
   countdownInterval = setInterval(tick, 1000);
 }
 
+// Simple img tag for use inside template literals (standings rows)
+function flagImg(team) {
+  const svg = getFlagSVG(team.name) || team.logo || '';
+  const uid = 'fi-' + Math.random().toString(36).slice(2,8);
+  setTimeout(() => {
+    const img = document.getElementById(uid);
+    if (img) setFlag(img, team.name, team.logo);
+  }, 0);
+  return `<img id="${uid}" src="${svg}" alt="${team.name}"
+    style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
+}
+
 // ═══════════════════════════════════════════════════════════════
 //  FLAG CIRCLE HELPERS
 // ═══════════════════════════════════════════════════════════════
 function flagCircle(team, size='lg') {
   const cls = size === 'lg' ? 'flag-circle-lg' : 'flag-circle-sm';
+  const svg = getFlagSVG(team.name) || team.logo || '';
+  // Render img; after insertion call setFlag to wire up full fallback chain
+  const uid = 'fc-' + Math.random().toString(36).slice(2,8);
+  setTimeout(() => {
+    const img = document.getElementById(uid);
+    if (img) setFlag(img, team.name, team.logo);
+  }, 0);
   return `<div class="${cls}">
-    <img src="${team.logo}" alt="${team.name}"
-         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+    <img id="${uid}" src="${svg}" alt="${team.name}"
+         style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">
     <span class="fallback" style="display:none;">🏳️</span>
   </div>`;
 }
@@ -485,9 +559,7 @@ function render(scenario) {
       html += `
         <div class="standing-row ${rankCls[i]}">
           <div class="sr-flag">
-            <img src="${row.team.logo}" alt="${row.team.name}"
-                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-            <span class="fallback" style="display:none;">🏳️</span>
+            ${flagImg(row.team)}
           </div>
           <div class="sr-name">${row.team.name}</div>
           <div class="sr-stat">${row.mp ?? '–'}</div>
