@@ -106,6 +106,8 @@ body{width:1080px;min-height:1920px;background:var(--bg);font-family:'CBABeaconS
 .dev-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .dev-label{font-size:12px;color:#666;letter-spacing:1px;text-transform:uppercase;}
 .dev-sel{background:#333;color:#fff;border:1px solid #555;border-radius:5px;padding:6px 10px;font-size:13px;font-family:'CBABeaconSans',sans-serif;cursor:pointer;flex:1;}
+.dev-btn{background:#333;color:#fff;border:1px solid #555;border-radius:5px;padding:6px 12px;font-size:13px;font-family:'CBABeaconSans',sans-serif;cursor:pointer;}
+.dev-status{font-size:12px;color:#888;}
 .dev-note{font-size:11px;color:#444;text-align:center;}
 </style>
 <script>const FLAG_MAP = {'Algeria':'ALG','Argentina':'ARG','Australia':'AUS','Austria':'AUT','Belgium':'BEL','Bosnia & Herzegovina':'BIH','Brazil':'BRA','Canada':'CAN','Cape Verde':'CPV','Ivory Coast':'CIV','Colombia':'COL','DR Congo':'COD','Croatia':'CRO','Curaçao':'CUW','Curacao':'CUW','Ecuador':'ECU','Egypt':'EGY','England':'ENG','Spain':'ESP','France':'FRA','Germany':'GER','Ghana':'GHA','Haiti':'HAI','Iran':'IRN','Iraq':'IRQ','Japan':'JPN','Jordan':'JOR','South Korea':'KOR','Korea Republic':'KOR','Saudi Arabia':'KSA','Morocco':'MAR','Mexico':'MEX','Netherlands':'NED','New Zealand':'NZL','Norway':'NOR','Panama':'PAN','Paraguay':'PAR','Poland':'POL','Portugal':'POR','Qatar':'QAT','Scotland':'SCO','Senegal':'SEN','South Africa':'RSA','Sweden':'SWE','Switzerland':'SUI','Tunisia':'TUN','Türkiye':'TUR','Turkey':'TUR','United States':'USA','USA':'USA','Uruguay':'URU','Uzbekistan':'UZB','Venezuela':'VEN','Serbia':'SRB','Cameroon':'CMR','Czechia':'CZE','Denmark':'DEN'};
@@ -188,6 +190,14 @@ function flagImg(name,size,extra,greyscale){const svg=getFlagSVG(name)||'';const
 <!-- DEV CONTROLS -->
 <div id="dev-bar">
   <div class="dev-row">
+    <div class="dev-label">Mode</div>
+    <select class="dev-sel" id="mode-select">
+      <option value="live" selected>Live API · WC 2026</option>
+      <option value="demo">Demo scenarios</option>
+    </select>
+    <button class="dev-btn" id="refresh-btn" type="button">Refresh</button>
+  </div>
+  <div class="dev-row" id="scenario-row" style="display:none;">
     <div class="dev-label">Scenario</div>
     <select class="dev-sel" id="scenario-select">
       <option value="h1_23">1H · 23' · ARG 1–0 (Di María)</option>
@@ -199,116 +209,9 @@ function flagImg(name,size,extra,greyscale){const svg=getFlagSVG(name)||'';const
       <option value="full_time">FT · ARG 3–3 AET · ARG on pens</option>
     </select>
   </div>
-  <div class="dev-note">Real data · fixture #855750 · Argentina vs France · 2022 WC Final</div>
+  <div class="dev-status" id="api-status">Connecting…</div>
+  <div class="dev-note">api-football · league 1 · season 2026 · Australia team 23 · poll via /api/match</div>
 </div>
 
-<script type="module">
-const REAL_EVENTS = [
-  {time:{elapsed:23},team:{id:26,name:'Argentina'},player:{name:'Ángel Di María'},  assist:{name:'Nahuel Molina'}, type:'Goal',  detail:'Normal Goal',comments:null},
-  {time:{elapsed:36},team:{id:26,name:'Argentina'},player:{name:'Lionel Messi'},     assist:{name:null},            type:'Goal',  detail:'Penalty',    comments:null},
-  {time:{elapsed:41},team:{id:2, name:'France'},   player:{name:'K. Mbappé'},         assist:{name:null},            type:'Goal',  detail:'Penalty',    comments:null},
-  {time:{elapsed:43},team:{id:2, name:'France'},   player:{name:'K. Mbappé'},         assist:{name:null},            type:'Goal',  detail:'Normal Goal',comments:null},
-  {time:{elapsed:52},team:{id:26,name:'Argentina'},player:{name:'Ángel Di María'},    assist:{name:'Acuña'},         type:'subst', detail:'Sub',        comments:null},
-  {time:{elapsed:64},team:{id:2, name:'France'},   player:{name:'M. Thuram'},         assist:{name:'O. Giroud'},     type:'subst', detail:'Sub',        comments:null},
-  {time:{elapsed:89},team:{id:26,name:'Argentina'},player:{name:'G. Montiel'},        assist:{name:null},            type:'Card',  detail:'Yellow Card',comments:'Foul'},
-  {time:{elapsed:90},team:{id:2, name:'France'},   player:{name:'K. Mbappé'},         assist:{name:null},            type:'Goal',  detail:'Penalty',    comments:null},
-  {time:{elapsed:90},team:{id:2, name:'France'},   player:{name:'K. Mbappé'},         assist:{name:null},            type:'Goal',  detail:'Normal Goal',comments:null},
-  {time:{elapsed:108},team:{id:26,name:'Argentina'},player:{name:'Lionel Messi'},     assist:{name:null},            type:'Goal',  detail:'Normal Goal',comments:null},
-  {time:{elapsed:118},team:{id:2, name:'France'},  player:{name:'K. Mbappé'},         assist:{name:null},            type:'Goal',  detail:'Penalty',    comments:null},
-];
-
-const SNAPSHOTS = {
-  h1_23:      {elapsed:23,  period:'First Half',  scoreH:1,scoreA:0,possH:46,possA:54,shots:[3,5],target:[2,1],corners:[1,2],fouls:[4,3],eventCount:1,_goal:true},
-  h1_36:      {elapsed:36,  period:'First Half',  scoreH:2,scoreA:0,possH:44,possA:56,shots:[6,9],target:[3,2],corners:[2,4],fouls:[7,5],eventCount:2,_goal:true},
-  halftime:   {elapsed:45,  period:'Half Time',   scoreH:2,scoreA:0,possH:43,possA:57,shots:[7,11],target:[3,3],corners:[3,5],fouls:[8,7],eventCount:2},
-  h2_80:      {elapsed:80,  period:'Second Half', scoreH:2,scoreA:1,possH:42,possA:58,shots:[10,16],target:[4,6],corners:[4,7],fouls:[11,10],eventCount:6,_goal:true},
-  h2_90:      {elapsed:90,  period:'Second Half', scoreH:2,scoreA:2,possH:42,possA:58,shots:[12,18],target:[5,7],corners:[5,8],fouls:[13,11],eventCount:9,_goal:true},
-  extra_time: {elapsed:108, period:'Extra Time',  scoreH:3,scoreA:2,possH:41,possA:59,shots:[14,20],target:[6,8],corners:[5,9],fouls:[13,12],eventCount:10,_goal:true},
-  full_time:  {elapsed:120, period:'AET 3–3 · ARG win on pens',scoreH:3,scoreA:3,possH:42,possA:58,shots:[15,22],target:[6,9],corners:[5,10],fouls:[13,12],eventCount:11},
-};
-
-const HOME_ID = 26, AWAY_ID = 2;
-const HOME_NAME = 'Argentina', AWAY_NAME = 'France';
-const HOME_LOGO = 'https://media.api-sports.io/football/teams/26.png';
-const AWAY_LOGO = 'https://media.api-sports.io/football/teams/2.png';
-
-function buildDesc(ev) {
-  if (ev.type === 'Goal') {
-    if (ev.detail === 'Penalty') return 'Penalty';
-    return ev.assist?.name ? `Assist: ${ev.assist.name}` : 'No assist';
-  }
-  if (ev.type === 'Card') return ev.comments || ev.detail;
-  if (ev.type === 'subst') return ev.assist?.name ? `Off: ${ev.assist.name}` : 'Substitution';
-  return ev.detail || '';
-}
-
-function eventSide(ev) {
-  return ev.team.id === HOME_ID ? 'home' : 'away';
-}
-
-function eventLabel(ev) {
-  if (ev.type === 'Goal') return ev.detail === 'Penalty' ? 'GOAL (PEN)' : 'GOAL';
-  if (ev.type === 'Card') return ev.detail.includes('Red') ? 'Red Card' : 'Yellow Card';
-  if (ev.type === 'subst') return 'Sub';
-  if (ev.type === 'Var') return 'VAR';
-  return ev.type;
-}
-
-let lastH = null, lastA = null;
-
-function render(key) {
-  const s = SNAPSHOTS[key];
-  const isFT = s.period.includes('AET') || s.period === 'Full Time' || s.period === 'Half Time';
-
-  // Scores
-  document.getElementById('score-home').textContent = s.scoreH;
-  document.getElementById('score-away').textContent = s.scoreA;
-  document.getElementById('match-clock').textContent = s.elapsed + (s.period.includes('Half') && !isFT ? ''' : '');
-  document.getElementById('match-period').textContent = s.period;
-
-  // Flags
-  setFlag(document.getElementById('flag-home'), HOME_NAME, HOME_LOGO);
-  setFlag(document.getElementById('flag-away'), AWAY_NAME, AWAY_LOGO);
-
-  // Possession
-  document.getElementById('poss-home').textContent = s.possH + '%';
-  document.getElementById('poss-away').textContent = s.possA + '%';
-  document.getElementById('poss-bar-home').style.width = s.possH + '%';
-
-  // Stats
-  const stats = [
-    ['shots', s.shots[0], s.shots[1]],
-    ['target', s.target[0], s.target[1]],
-    ['corners', s.corners[0], s.corners[1]],
-    ['fouls', s.fouls[0], s.fouls[1]],
-  ];
-  stats.forEach(([id, h, a]) => {
-    document.getElementById(`s-${id}-h`).textContent = h ?? '–';
-    document.getElementById(`s-${id}-a`).textContent = a ?? '–';
-  });
-
-  // Events feed — 5 most recent
-  const events = REAL_EVENTS.slice(0, s.eventCount).reverse().slice(0, 5);
-  const feed = document.getElementById('feed-card');
-  feed.innerHTML = events.map((ev, i) => {
-    const side = eventSide(ev);
-    const label = eventLabel(ev);
-    const desc = buildDesc(ev);
-    const min = ev.time.elapsed + (ev.time.extra ? `+${ev.time.extra}` : '') + ''';
-    const isLast = i === events.length - 1;
-    const isNow = false; // 'now playing' row not in real data
-    return `<div class="feed-item${isLast ? ' last' : ''}">
-      <div class="feed-top">
-        <span class="feed-min">${min}</span>
-        <span class="feed-type ${side}">${label}</span>
-        <span class="feed-player ${side}">${ev.player.name}</span>
-      </div>
-      <div class="feed-desc">${desc}</div>
-    </div>`;
-  }).join('');
-}
-
-document.getElementById('scenario-select').addEventListener('change', e => render(e.target.value));
-render('h2_90');
-</script>
+<script type="module" src="js/match-live.js"></script>
 </body></html>
