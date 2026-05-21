@@ -315,18 +315,68 @@ html, body {
         <div class="list-item-tag">2 LIVE</div>
       </div>
 
-      <div class="list-section-label">Upcoming</div>
+      <div class="list-item" data-src="screen-goal.html" data-label="Goal Overlay" data-tag="ANIM">
+        <div class="list-item-dot"></div>
+        <div class="list-item-label">Goal Overlay</div>
+        <div class="list-item-tag">ANIM</div>
+      </div>
 
-      <div class="list-item" data-src="screen-comingup.html?scenario=single" data-label="Coming Up — Single" data-tag="1 match">
+      <div class="list-section-label">Upcoming — Group Stage</div>
+
+      <div class="list-item" data-src="screen-comingup.html" data-label="Coming Up — Single Match" data-tag="1 match">
         <div class="list-item-dot"></div>
         <div class="list-item-label">Coming Up — Single</div>
         <div class="list-item-tag">1 match</div>
       </div>
 
-      <div class="list-item" data-src="screen-comingup.html?scenario=two" data-label="Coming Up — Double" data-tag="2 matches">
+      <div class="list-item" data-src="screen-comingup-two.html" data-label="Coming Up — Two Matches" data-tag="2 matches">
         <div class="list-item-dot"></div>
-        <div class="list-item-label">Coming Up — Double</div>
+        <div class="list-item-label">Coming Up — Two Matches</div>
         <div class="list-item-tag">2 matches</div>
+      </div>
+
+      <div class="list-section-label">Upcoming — Knockout</div>
+
+      <div class="list-item" data-src="screen-comingup-knockout.html?scenario=r32_unknown" data-label="Coming Up — Opponent TBD" data-tag="R32">
+        <div class="list-item-dot"></div>
+        <div class="list-item-label">Coming Up — Opp. TBD</div>
+        <div class="list-item-tag">R32</div>
+      </div>
+
+      <div class="list-item" data-src="screen-comingup-knockout.html?scenario=r32_known" data-label="Coming Up — Opponent Known" data-tag="R32">
+        <div class="list-item-dot"></div>
+        <div class="list-item-label">Coming Up — Opp. Known</div>
+        <div class="list-item-tag">R32</div>
+      </div>
+
+      <div class="list-item" data-src="screen-comingup-knockout.html?scenario=r16_unknown" data-label="Coming Up — Round of 16 TBD" data-tag="R16">
+        <div class="list-item-dot"></div>
+        <div class="list-item-label">Coming Up — Opp. TBD</div>
+        <div class="list-item-tag">R16</div>
+      </div>
+
+      <div class="list-item" data-src="screen-comingup-knockout.html?scenario=r16_known" data-label="Coming Up — Round of 16 Known" data-tag="R16">
+        <div class="list-item-dot"></div>
+        <div class="list-item-label">Coming Up — Opp. Known</div>
+        <div class="list-item-tag">R16</div>
+      </div>
+
+      <div class="list-item" data-src="screen-comingup-knockout.html?scenario=qf_known" data-label="Coming Up — Quarter-final" data-tag="QF">
+        <div class="list-item-dot"></div>
+        <div class="list-item-label">Coming Up — Quarter-final</div>
+        <div class="list-item-tag">QF</div>
+      </div>
+
+      <div class="list-item" data-src="screen-comingup-knockout.html?scenario=sf_known" data-label="Coming Up — Semi-final" data-tag="SF">
+        <div class="list-item-dot"></div>
+        <div class="list-item-label">Coming Up — Semi-final</div>
+        <div class="list-item-tag">SF</div>
+      </div>
+
+      <div class="list-item" data-src="screen-comingup-knockout.html?scenario=final_known" data-label="Coming Up — Final" data-tag="FIN">
+        <div class="list-item-dot"></div>
+        <div class="list-item-label">Coming Up — Final</div>
+        <div class="list-item-tag">FIN</div>
       </div>
 
       <div class="list-section-label">Results</div>
@@ -345,19 +395,19 @@ html, body {
 
       <div class="list-section-label">Group Stage</div>
 
-      <div class="list-item" data-src="screen-groupstatus-1.html" data-label="Group Stage State — Groups A–F" data-tag="1/2">
+      <div class="list-item" data-src="screen-groupstatus-1.html" data-label="Group Stage — Groups A–F" data-tag="1/2">
         <div class="list-item-dot"></div>
         <div class="list-item-label">Group Stage — A–F</div>
         <div class="list-item-tag">1/2</div>
       </div>
 
-      <div class="list-item" data-src="screen-groupstatus-2.html" data-label="Group Stage State — Groups G–L" data-tag="2/2">
+      <div class="list-item" data-src="screen-groupstatus-2.html" data-label="Group Stage — Groups G–L" data-tag="2/2">
         <div class="list-item-dot"></div>
         <div class="list-item-label">Group Stage — G–L</div>
         <div class="list-item-tag">2/2</div>
       </div>
 
-      <div class="list-section-label">Knockout</div>
+      <div class="list-section-label">Knockout Bracket</div>
 
       <div class="list-item" data-src="screen-roundof32.html" data-label="Round of 32" data-tag="R32">
         <div class="list-item-dot"></div>
@@ -382,12 +432,17 @@ html, body {
         <div class="list-item-label">Round of 16</div>
       </div>
 
+      <div class="list-item disabled" style="opacity:0.3;cursor:default;" data-disabled="true">
+        <div class="list-item-dot"></div>
+        <div class="list-item-label">Quarter-finals</div>
+      </div>
+
     </div>
 
     <div class="sidebar-footer">
       <div class="footer-note">
-        <strong>Mock data</strong> — 2022 World Cup · ARG vs FRA Final
-        <br>Real api-football responses · fixture #855750
+        <strong>17 screens</strong> · 11 active · 4 coming soon
+        <br>Mock data · api-football · WC 2026
       </div>
     </div>
 

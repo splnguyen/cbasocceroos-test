@@ -133,6 +133,7 @@ html, body {
 
 <div id="transition-overlay"></div>
 <iframe id="screen-frame" src="screen-matchlive.html" title="Dashboard screen"></iframe>
+<iframe id="goal-frame" title="Goal overlay" style="display:none;position:absolute;inset:0;width:1080px;height:1920px;border:none;z-index:100;pointer-events:none;"></iframe>
 <div id="progress-bar"></div>
 <div id="screen-label">Match Live</div>
 
@@ -141,9 +142,30 @@ html, body {
   <div class="dev-row">
     <div class="dev-label">State</div>
     <select class="dev-select" id="state-select">
-      <option value="match-live">Match Live</option>
-      <option value="comingup-single" selected>Match Coming Up — Single</option>
-      <option value="comingup-double">Match Coming Up — Double</option>
+      <optgroup label="Live">
+        <option value="match-live">Match Live</option>
+        <option value="match-live-pair">Match Live — Pair</option>
+        <option value="goal-overlay">Goal Overlay</option>
+      </optgroup>
+      <optgroup label="Upcoming">
+        <option value="comingup-single" selected>Coming Up — Single</option>
+        <option value="comingup-two">Coming Up — Two Matches</option>
+        <option value="comingup-ko-unknown">Coming Up — KO (Opp. TBD)</option>
+        <option value="comingup-ko-known">Coming Up — KO (Opp. Known)</option>
+        <option value="comingup-sf">Coming Up — Semi-final</option>
+        <option value="comingup-final">Coming Up — Final</option>
+      </optgroup>
+      <optgroup label="Results">
+        <option value="match-complete">Match Complete</option>
+        <option value="matches-complete">Latest Matches</option>
+      </optgroup>
+      <optgroup label="Group Stage">
+        <option value="group-status-1">Group Stage A–F</option>
+        <option value="group-status-2">Group Stage G–L</option>
+      </optgroup>
+      <optgroup label="Knockout">
+        <option value="round-of-32">Round of 32</option>
+      </optgroup>
     </select>
     <button class="dev-btn" id="go-btn">Go to screen</button>
   </div>
@@ -181,43 +203,66 @@ html, body {
 //  urlParam  → the ?scenario= value passed to that screen
 // ═══════════════════════════════════════════════════════════════
 const SCREENS = [
-  {
-    id:       'match-live',
-    label:    'Match Live',
-    src:      'screen-matchlive.html',
-    urlParam: null,
-  },
-  {
-    id:       'comingup-single',
-    label:    'Coming Up — Single',
-    src:      'screen-comingup.html',
-    urlParam: 'single',
-  },
-  {
-    id:       'comingup-double',
-    label:    'Coming Up — Double',
-    src:      'screen-comingup.html',
-    urlParam: 'two',
-  },
-  // ── FUTURE SCREENS — uncomment as built ──
-  // { id:'recent-matches',  label:'Recent Matches',     src:'screen-recentmatches.html',  urlParam:null },
-  // { id:'top-scorers',     label:'Top Scorers',        src:'screen-topscorers.html',     urlParam:null },
-  // { id:'top-keepers',     label:'Top Keepers',        src:'screen-topkeepers.html',     urlParam:null },
-  // { id:'round-of-32',     label:'Round of 32',        src:'screen-roundof32.html',      urlParam:null },
-  // { id:'round-of-16',     label:'Round of 16',        src:'screen-roundof16.html',      urlParam:null },
-  // { id:'goal-overlay',    label:'Goal Scored',        src:'screen-goal.html',           urlParam:null },
+  // ── Live ─────────────────────────────────────────────────────
+  { id: 'match-live',          label: 'Match Live',                src: 'screen-matchlive.html',          urlParam: null },
+  { id: 'match-live-pair',     label: 'Match Live — Pair',         src: 'screen-matchlivepair.html',      urlParam: null },
+  // ── Upcoming — Group Stage ────────────────────────────────────
+  { id: 'comingup-single',     label: 'Coming Up — Single',        src: 'screen-comingup.html',           urlParam: null },
+  { id: 'comingup-two',        label: 'Coming Up — Two Matches',   src: 'screen-comingup-two.html',       urlParam: null },
+  // ── Upcoming — Knockout ───────────────────────────────────────
+  { id: 'comingup-ko-unknown', label: 'Coming Up — Opp. TBD',      src: 'screen-comingup-knockout.html',  urlParam: 'r32_unknown' },
+  { id: 'comingup-ko-known',   label: 'Coming Up — Opp. Known',    src: 'screen-comingup-knockout.html',  urlParam: 'r32_known' },
+  { id: 'comingup-sf',         label: 'Coming Up — Semi-final',    src: 'screen-comingup-knockout.html',  urlParam: 'sf_known' },
+  { id: 'comingup-final',      label: 'Coming Up — Final',         src: 'screen-comingup-knockout.html',  urlParam: 'final_known' },
+  // ── Results ───────────────────────────────────────────────────
+  { id: 'match-complete',      label: 'Match Complete',            src: 'screen-matchcomplete.html',      urlParam: null },
+  { id: 'matches-complete',    label: 'Latest Matches',            src: 'screen-matchescomplete.html',    urlParam: null },
+  // ── Group Stage overview ──────────────────────────────────────
+  { id: 'group-status-1',      label: 'Group Stage A–F',           src: 'screen-groupstatus-1.html',      urlParam: null },
+  { id: 'group-status-2',      label: 'Group Stage G–L',           src: 'screen-groupstatus-2.html',      urlParam: null },
+  // ── Knockout bracket ─────────────────────────────────────────
+  { id: 'round-of-32',         label: 'Round of 32',               src: 'screen-roundof32.html',          urlParam: null },
+  // ── Goal overlay (driven by postMessage, not carousel) ────────
+  { id: 'goal-overlay',        label: 'Goal Scored',               src: 'screen-goal.html',               urlParam: null },
 ];
 
 // ── Carousel config ───────────────────────────────────────────
-// Which screens show in each stage's carousel (by id)
-// This will be used when stage-detection is wired up in Phase 2
+// Each stage lists screen ids in display order.
+// 'match-live' and 'match-live-pair' are injected dynamically
+// when a live match is detected (see liveCheckLoop below).
+// 'goal-overlay' is never in a carousel — triggered by postMessage.
 const STAGE_CAROUSELS = {
-  'group-stage':   ['comingup-single', 'comingup-double', 'recent-matches', 'top-scorers', 'top-keepers'],
-  'round-of-32':   ['comingup-single', 'round-of-32',     'top-scorers',    'top-keepers'],
-  'round-of-16':   ['comingup-single', 'round-of-16',     'top-scorers',    'top-keepers'],
-  'quarter-finals':['comingup-single', 'top-scorers',     'top-keepers'],
-  'semi-finals':   ['comingup-single', 'top-scorers',     'top-keepers'],
-  'finals':        ['comingup-single', 'top-scorers',     'top-keepers'],
+  'group-stage': [
+    'comingup-single',
+    'comingup-two',
+    'match-complete',
+    'matches-complete',
+    'group-status-1',
+    'group-status-2',
+  ],
+  'round-of-32': [
+    'comingup-ko-unknown',
+    'comingup-ko-known',
+    'round-of-32',
+    'match-complete',
+  ],
+  'round-of-16': [
+    'comingup-ko-unknown',
+    'comingup-ko-known',
+    'match-complete',
+  ],
+  'quarter-finals': [
+    'comingup-ko-known',
+    'match-complete',
+  ],
+  'semi-finals': [
+    'comingup-sf',
+    'match-complete',
+  ],
+  'finals': [
+    'comingup-final',
+    'match-complete',
+  ],
 };
 
 // ── Stage UTC ranges (from brief) ────────────────────────────
@@ -273,8 +318,7 @@ function screenById(id) {
 
 function buildSrc(screen) {
   if (!screen) return '';
-  const base = screen.src;
-  return screen.urlParam ? `${base}?scenario=${screen.urlParam}` : base;
+  return screen.urlParam ? `${screen.src}?scenario=${screen.urlParam}` : screen.src;
 }
 
 function goToScreen(id, fromCarousel = false) {
@@ -397,6 +441,70 @@ document.getElementById('speed-select').addEventListener('change', (e) => {
     playCarousel();
   }
 });
+
+// ═══════════════════════════════════════════════════════════════
+//  GOAL OVERLAY — triggered by postMessage from match-live iframe
+// ═══════════════════════════════════════════════════════════════
+const goalFrame  = document.getElementById('goal-frame');
+
+window.addEventListener('message', (e) => {
+  if (e.data?.type !== 'GOAL') return;
+  const scorer = e.data.scorer ?? '';
+  showGoalOverlay(scorer);
+});
+
+function showGoalOverlay(scorerText) {
+  // Load goal screen into the overlay iframe if not already loaded
+  if (!goalFrame.src || !goalFrame.src.includes('screen-goal.html')) {
+    goalFrame.src = 'screen-goal.html';
+    goalFrame.onload = () => {
+      goalFrame.style.display = 'block';
+      goalFrame.contentWindow?.triggerGoal?.(scorerText);
+    };
+  } else {
+    goalFrame.style.display = 'block';
+    goalFrame.contentWindow?.triggerGoal?.(scorerText);
+  }
+  // Auto-hide after 8.5s (matches the goal animation total: 2.5s in + 5s hold + 0.8s out + 0.2s buffer)
+  setTimeout(() => { goalFrame.style.display = 'none'; }, 8500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LIVE MATCH DETECTION — poll /api/match every 60s
+//  If a live match is found, inject match-live into the carousel
+//  as the first screen; remove it when no longer live.
+// ═══════════════════════════════════════════════════════════════
+let liveMatchActive = false;
+
+async function checkForLiveMatch() {
+  try {
+    const res  = await fetch('/api/match');
+    const data = await res.json();
+    if (!data.ok) return;
+
+    const isLive = ['1H','2H','HT','ET','BT','P','LIVE','INT'].includes(data.statusShort);
+    const hasPair = data.concurrentMatch != null; // future extension
+
+    if (isLive && !liveMatchActive) {
+      liveMatchActive = true;
+      // Prepend match-live to the active playlist by temporarily overriding
+      // the carousel — navigate there immediately if carousel is playing
+      if (carouselPlaying) {
+        pauseCarousel();
+        goToScreen('match-live');
+        playCarousel();
+      }
+    } else if (!isLive && liveMatchActive) {
+      liveMatchActive = false;
+    }
+  } catch (e) {
+    // silently ignore — network may be unavailable
+  }
+}
+
+// Check for live match every 60s
+setInterval(checkForLiveMatch, 60000);
+checkForLiveMatch(); // immediate check on load
 
 // ═══════════════════════════════════════════════════════════════
 //  BOOT — start on coming up single, carousel paused

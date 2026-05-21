@@ -46,6 +46,8 @@ let pollTimer = null;
 let liveState = null;
 let homeId = null;
 let awayId = null;
+let lastScoreH = null;
+let lastScoreA = null;
 
 function $(id) {
   return document.getElementById(id);
@@ -190,13 +192,58 @@ function setStatus(msg, isError = false) {
   el.style.color = isError ? 'var(--color-red-bright, #f00)' : '#888';
 }
 
+// Find most recent goal scorer for a given team from events
+function findScorer(events, teamId) {
+  if (!events?.length) return '';
+  const goals = [...events]
+    .reverse()
+    .filter(ev => ev.type === 'Goal' && ev.team?.id === teamId);
+  return goals[0]?.player?.name ?? '';
+}
+
+// Notify parent carousel frame to show goal overlay
+function notifyGoal(scorerText) {
+  try {
+    if (window.parent && window.parent !== window) {
+      // Running inside carousel iframe
+      window.parent.postMessage({ type: 'GOAL', scorer: scorerText }, '*');
+    } else if (typeof window.triggerGoal === 'function') {
+      // Running standalone (preview / direct open)
+      window.triggerGoal(scorerText);
+    }
+  } catch (e) {
+    console.warn('[match-live] notifyGoal failed:', e);
+  }
+}
+
 async function refreshLive() {
   try {
     setStatus('Fetching…');
     liveState = await fetchLive();
     renderState(liveState);
+
+    // ── Goal detection ─────────────────────────────────────────
+    // On first poll, just store baseline scores — don't trigger.
+    // On subsequent polls, detect any score increase.
+    const newH = liveState.scoreH ?? 0;
+    const newA = liveState.scoreA ?? 0;
+    if (lastScoreH !== null && lastScoreA !== null && liveState.period !== 'Full Time') {
+      if (newH > lastScoreH) {
+        // Home team scored — find scorer from most recent goal event
+        const scorer = findScorer(liveState.events, liveState.home.id);
+        notifyGoal(`${scorer} scores for ${liveState.home.name}`);
+      } else if (newA > lastScoreA) {
+        // Away team scored
+        const scorer = findScorer(liveState.events, liveState.away.id);
+        notifyGoal(`${scorer} scores for ${liveState.away.name}`);
+      }
+    }
+    lastScoreH = newH;
+    lastScoreA = newA;
     const t = new Date(liveState.fetchedAt).toLocaleTimeString();
-    setStatus(`Live · fixture #${liveState.fixtureId} · ${liveState.home.name} vs ${liveState.away.name} · ${t}`);
+    const wc = liveState.leagueSeason === 2026 ? 'WC 2026' : `season ${liveState.leagueSeason ?? '?'}`;
+    const src = liveState.resolvedAs ? ` · ${liveState.resolvedAs}` : '';
+    setStatus(`Live · ${wc} · #${liveState.fixtureId} · ${liveState.home.name} vs ${liveState.away.name}${src} · ${t}`);
   } catch (err) {
     setStatus(`Error: ${err.message}`, true);
     console.error('[match-live]', err);
@@ -224,6 +271,8 @@ function setMode(mode) {
 
   if (mode === 'live') {
     if (scenarioRow) scenarioRow.style.display = 'none';
+    lastScoreH = null; // reset baseline so first poll doesn't false-trigger
+    lastScoreA = null;
     startPolling();
   } else {
     stopPolling();

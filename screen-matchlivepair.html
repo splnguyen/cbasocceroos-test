@@ -24,9 +24,9 @@
   --dark-grey:var(--color-dark-grey);
   --divider:var(--color-white);
 }
-html{width:1080px;overflow-y:auto;overflow-x:hidden;background:var(--bg);}
-body{width:1080px;min-height:1920px;background:var(--bg);font-family:'CBABeaconSans',sans-serif;color:var(--text-primary);}
-.screen{width:1080px;min-height:1920px;padding:60px;display:flex;flex-direction:column;gap:79px;}
+html{width:1080px;height:1920px;overflow:hidden;background:var(--bg);}
+body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);font-family:'CBABeaconSans',sans-serif;color:var(--text-primary);}
+.screen{width:1080px;height:1920px;padding:60px;display:flex;flex-direction:column;gap:40px;overflow:hidden;}
 
 /* ── HEADER ── */
 .top-row{display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0;}
@@ -49,7 +49,7 @@ body{width:1080px;min-height:1920px;background:var(--bg);font-family:'CBABeaconS
 
 /* ── SCORE SECTION ── */
 .score-section{display:flex;align-items:flex-start;justify-content:center;padding:0 60px;flex-shrink:0;}
-.team-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:60px;}
+.team-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:30px;}
 .score-num{font-size:300px;font-weight:800;line-height:0.9;letter-spacing:0;text-align:center;transition:all 0.5s cubic-bezier(.34,1.56,.64,1);}
 .score-num.home{color:var(--gold);}
 .score-num.away{color:var(--purple-l);}
@@ -85,8 +85,8 @@ body{width:1080px;min-height:1920px;background:var(--bg);font-family:'CBABeaconS
 .stat-val.away{color:var(--purple-l);}
 
 /* ── EVENTS FEED ── */
-.feed-card{background:var(--bg-card);border-radius:10px;padding:24px 24px 8px 24px;display:flex;flex-direction:column;gap:24px;flex-shrink:0;}
-.feed-item{display:flex;flex-direction:column;gap:18px;padding-bottom:20px;border-bottom:1px solid var(--dark-grey);}
+.feed-card{background:var(--bg-card);border-radius:10px;padding:24px 24px 8px 24px;display:flex;flex-direction:column;gap:0;flex:1;min-height:0;overflow:hidden;}
+.feed-item{display:flex;flex-direction:column;gap:14px;flex:1;min-height:0;padding:16px 0;border-bottom:1px solid var(--dark-grey);}
 .feed-item:last-child{border-bottom:none;}
 .feed-top{display:flex;align-items:center;font-size:30px;font-weight:800;letter-spacing:1.5px;}
 .feed-min{width:110px;flex-shrink:0;color:var(--text-primary);}
