@@ -7,7 +7,7 @@
  *   ?season=2026      — default
  *   ?league=1         — FIFA World Cup
  *   ?demo=1           — force 2022 final demo fixture
- *   ?poll=30          — seconds between refreshes (default 30)
+ *   ?poll=N           — override poll interval in seconds (default: 5s when live, 5min otherwise)
  *   ?mode=demo        — start in demo scenario mode
  */
 
@@ -39,7 +39,11 @@ const DEMO_HOME = { id: 26, name: 'Argentina', logo: 'https://media.api-sports.i
 const DEMO_AWAY = { id: 2, name: 'France', logo: 'https://media.api-sports.io/football/teams/2.png' };
 
 const params = new URLSearchParams(window.location.search);
-const POLL_MS = Math.max(15, Number(params.get('poll')) || 30) * 1000;
+const LIVE_POLL_MS = 5_000;
+const IDLE_POLL_MS = 5 * 60_000;
+const POLL_OVERRIDE_MS = params.get('poll')
+  ? Math.max(2, Number(params.get('poll'))) * 1000
+  : null;
 
 let currentMode = params.get('mode') === 'demo' ? 'demo' : 'live';
 let pollTimer = null;
@@ -243,24 +247,39 @@ async function refreshLive() {
     const t = new Date(liveState.fetchedAt).toLocaleTimeString();
     const wc = liveState.leagueSeason === 2026 ? 'WC 2026' : `season ${liveState.leagueSeason ?? '?'}`;
     const src = liveState.resolvedAs ? ` · ${liveState.resolvedAs}` : '';
-    setStatus(`Live · ${wc} · #${liveState.fixtureId} · ${liveState.home.name} vs ${liveState.away.name}${src} · ${t}`);
+    const cadence = liveState.isLive ? '5s' : '5min';
+    setStatus(`Live · ${wc} · #${liveState.fixtureId} · ${liveState.home.name} vs ${liveState.away.name}${src} · ${t} · poll ${cadence}`);
+    return liveState;
   } catch (err) {
     setStatus(`Error: ${err.message}`, true);
     console.error('[match-live]', err);
+    return null;
   }
+}
+
+function nextPollDelay(data) {
+  if (POLL_OVERRIDE_MS) return POLL_OVERRIDE_MS;
+  if (!data) return IDLE_POLL_MS;
+  return data.isLive ? LIVE_POLL_MS : IDLE_POLL_MS;
 }
 
 function stopPolling() {
   if (pollTimer) {
-    clearInterval(pollTimer);
+    clearTimeout(pollTimer);
     pollTimer = null;
+  }
+}
+
+async function pollTick() {
+  const data = await refreshLive();
+  if (currentMode === 'live') {
+    pollTimer = setTimeout(pollTick, nextPollDelay(data));
   }
 }
 
 function startPolling() {
   stopPolling();
-  refreshLive();
-  pollTimer = setInterval(refreshLive, POLL_MS);
+  pollTick();
 }
 
 function setMode(mode) {
