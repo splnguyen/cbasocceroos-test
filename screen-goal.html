@@ -96,11 +96,11 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);font-f
   100%{opacity:1;transform:scale(1);}
 }
 
-/* Goal text bounce in */
-@keyframes goalIn{
+/* Per-letter bounce-in for "Goal!" */
+@keyframes letterIn{
   0%  {opacity:0;transform:scale(0.1) translateY(40px);}
-  60% {opacity:1;transform:scale(1.08) translateY(-8px);}
-  80% {opacity:1;transform:scale(0.97) translateY(2px);}
+  60% {opacity:1;transform:scale(1.15) translateY(-10px);}
+  80% {opacity:1;transform:scale(0.95) translateY(2px);}
   100%{opacity:1;transform:scale(1) translateY(0);}
 }
 
@@ -108,6 +108,13 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);font-f
 @keyframes scorerIn{
   0%  {opacity:0;transform:translateY(30px);}
   100%{opacity:1;transform:translateY(0);}
+}
+
+/* Confetti piece — fall with horizontal drift + spin */
+@keyframes confettiFall{
+  0%   {opacity:0;transform:translate3d(0,0,0) rotate(0deg);}
+  8%   {opacity:1;}
+  100% {opacity:0;transform:translate3d(var(--dx,0px),120vh,0) rotate(var(--r,720deg));}
 }
 
 /* Fade out — applied to individual elements */
@@ -124,6 +131,7 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);font-f
   gap:100px;
   pointer-events:none;
   opacity:0;
+  overflow:hidden;
 }
 .goal-overlay.playing,
 .goal-overlay.leaving{
@@ -136,8 +144,27 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);font-f
   to{transform:rotate(360deg) scale(1);}
 }
 
+/* Confetti layer */
+.goal-confetti{
+  position:absolute;inset:0;
+  pointer-events:none;
+  overflow:hidden;
+  z-index:1;
+}
+.confetti-piece{
+  position:absolute;
+  top:-40px;
+  border-radius:2px;
+  opacity:0;
+  will-change:transform,opacity;
+}
+.confetti-piece.c0{background:var(--color-purple-light);}
+.confetti-piece.c1{background:var(--color-white);}
+.confetti-piece.c2{background:var(--color-purple-bright);}
+.confetti-piece.c3{background:var(--color-mid-grey);}
+
 /* ⚽ ball */
-.goal-ball{font-size:300px;line-height:1;display:block;opacity:0;}
+.goal-ball{font-size:300px;line-height:1;display:block;opacity:0;position:relative;z-index:2;}
 .goal-overlay.playing .goal-ball{
   animation:ballIn 2s ease-out 0.1s forwards;
 }
@@ -151,16 +178,23 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);font-f
   opacity:1;
 }
 
-/* Goal! text */
+/* Goal! text — per-letter stagger */
 .goal-word{
   font-size:300px;font-weight:800;line-height:0.9;
   letter-spacing:0;color:var(--gold);
-  opacity:0;text-align:center;
+  text-align:center;
+  display:flex;justify-content:center;
+  position:relative;z-index:2;
 }
-.goal-overlay.playing .goal-word{
-  animation:goalIn 2s cubic-bezier(.34,1.56,.64,1) 0.5s forwards;
+.goal-word span{
+  display:inline-block;
+  opacity:0;
+  transform:scale(0.1) translateY(40px);
 }
-.goal-overlay.leaving .goal-word{
+.goal-overlay.playing .goal-word span{
+  animation:letterIn 0.7s cubic-bezier(.34,1.56,.64,1) calc(0.5s + var(--d,0s)) forwards;
+}
+.goal-overlay.leaving .goal-word span{
   animation:fadeOut 0.8s ease forwards;
   opacity:1;
 }
@@ -172,6 +206,7 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);font-f
   color:var(--gold);text-align:center;
   text-transform:uppercase;
   opacity:0;padding:0 60px;
+  position:relative;z-index:2;
 }
 .goal-overlay.playing .goal-scorer{
   animation:scorerIn 1s ease 1.2s forwards;
@@ -256,8 +291,9 @@ function flagImg(name,size,extra,greyscale){const svg=getFlagSVG(name)||'';const
 
 <!-- ── GOAL OVERLAY ── -->
 <div class="goal-overlay" id="goal-overlay">
+  <div class="goal-confetti" id="goal-confetti"></div>
   <div class="goal-ball">⚽</div>
-  <div class="goal-word">Goal!</div>
+  <div class="goal-word" id="goal-word"><span style="--d:0s">G</span><span style="--d:0.08s">o</span><span style="--d:0.16s">a</span><span style="--d:0.24s">l</span><span style="--d:0.32s">!</span></div>
   <div class="goal-scorer" id="goal-scorer">Messi scores for Argentina</div>
 </div>
 
@@ -269,7 +305,7 @@ function flagImg(name,size,extra,greyscale){const svg=getFlagSVG(name)||'';const
     <button class="dev-btn" id="trigger-btn">▶ Trigger Goal</button>
   </div>
   <div class="dev-note">
-    Animation: ball spins in (2s) → Goal! scales up (2s) → scorer slides in (1s) → all hold 5s → fade out together (0.8s)
+    Animation: ball spins in · confetti burst · "Goal!" letters stagger in · scorer slides in · hold ~5s · fade out (0.8s)
   </div>
 </div>
 
@@ -286,6 +322,28 @@ function flagImg(name,size,extra,greyscale){const svg=getFlagSVG(name)||'';const
 let goalTimer   = null;
 let settleTimer = null;
 
+function spawnConfetti() {
+  const layer = document.getElementById('goal-confetti');
+  if (!layer) return;
+  layer.innerHTML = '';
+  const N = 120;
+  for (let i = 0; i < N; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece c' + (i % 4);
+    const dx = (Math.random() - 0.5) * 600;
+    const r  = (Math.random() < 0.5 ? -1 : 1) * (360 + Math.random() * 720);
+    const delay = 0.8 + Math.random() * 0.5;
+    const dur   = 2.4 + Math.random() * 1.8;
+    p.style.left   = (Math.random() * 100) + '%';
+    p.style.width  = (8 + Math.random() * 10) + 'px';
+    p.style.height = (14 + Math.random() * 14) + 'px';
+    p.style.setProperty('--dx', dx + 'px');
+    p.style.setProperty('--r',  r  + 'deg');
+    p.style.animation = `confettiFall ${dur}s cubic-bezier(.3,.6,.5,1) ${delay}s forwards`;
+    layer.appendChild(p);
+  }
+}
+
 function triggerGoal(scorerText) {
   if (goalTimer)   { clearTimeout(goalTimer);   goalTimer   = null; }
   if (settleTimer) { clearTimeout(settleTimer); settleTimer = null; }
@@ -297,6 +355,7 @@ function triggerGoal(scorerText) {
   // Full reset
   overlay.className = 'goal-overlay';
   ball.classList.remove('settled');
+  spawnConfetti();
   void overlay.offsetWidth; // force reflow
 
   // Entrance
