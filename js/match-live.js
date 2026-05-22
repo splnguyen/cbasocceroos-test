@@ -245,10 +245,10 @@ async function refreshLive() {
     lastScoreH = newH;
     lastScoreA = newA;
     const t = new Date(liveState.fetchedAt).toLocaleTimeString();
-    const wc = liveState.leagueSeason === 2026 ? 'WC 2026' : `season ${liveState.leagueSeason ?? '?'}`;
+    const season = `season ${liveState.leagueSeason ?? '?'}`;
     const src = liveState.resolvedAs ? ` · ${liveState.resolvedAs}` : '';
     const cadence = liveState.isLive ? '5s' : '5min';
-    setStatus(`Live · ${wc} · #${liveState.fixtureId} · ${liveState.home.name} vs ${liveState.away.name}${src} · ${t} · poll ${cadence}`);
+    setStatus(`Live · ${season} · #${liveState.fixtureId} · ${liveState.home.name} vs ${liveState.away.name}${src} · ${t} · poll ${cadence}`);
     return liveState;
   } catch (err) {
     setStatus(`Error: ${err.message}`, true);

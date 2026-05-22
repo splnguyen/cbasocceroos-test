@@ -148,59 +148,86 @@ function flagImg(name,size,extra,greyscale){const svg=getFlagSVG(name)||'';const
 <!-- DEV CONTROLS -->
 <div id="dev-bar">
   <div class="dev-row">
+    <div class="dev-lbl">Mode</div>
+    <select class="dev-sel" id="mode-select">
+      <option value="live">Live API · next AUS fixture</option>
+      <option value="demo">Demo scenario</option>
+    </select>
+  </div>
+  <div class="dev-row" id="scenario-row" style="display:none;">
     <div class="dev-lbl">Scenario</div>
     <select class="dev-sel" id="scenario-select">
       <option value="aus_turkey">Australia vs Türkiye · Group D · 14 Jun 13:59 AEST</option>
       <option value="bra_srb">Brazil vs Serbia · Group C · 25 Nov 2022 07:00 AEST</option>
     </select>
   </div>
-  <div class="dev-note">Mock data · countdown live · qualification status derived from standings</div>
+  <div class="dev-note" id="api-status">–</div>
 </div>
 
 <script type="module">
 const SCENARIOS = {
   aus_turkey: {
-    home: { name:'Australia',  logo:'https://media.api-sports.io/football/teams/26.png' },
-    away: { name:'Türkiye',    logo:'https://media.api-sports.io/football/teams/37.png' },
-    kickoffUTC: Date.UTC(2026,5,14,3,59,0),
-    kickoffStr: 'SATURDAY 14 JUNE 1:59PM AEST',
-    stage: 'Group Stage',
-    group: 'GROUP D',
+    fixture: {
+      fixtureId: 'demo-aus-tur',
+      home: { name:'Australia', logo:'https://media.api-sports.io/football/teams/26.png' },
+      away: { name:'Türkiye',   logo:'https://media.api-sports.io/football/teams/37.png' },
+      kickoffEpoch: Date.UTC(2026,5,14,3,59,0),
+      kickoffStr: 'SATURDAY 14 JUNE 1:59PM AEST',
+      stage: 'Group Stage',
+      group: 'GROUP D',
+    },
     standings: [
-      { name:'Australia',    pts:3, played:1 },
-      { name:'United States',pts:1, played:1 },
-      { name:'Türkiye',      pts:1, played:1 },
-      { name:'Japan',        pts:0, played:1 },
+      { name:'Australia',     points:3, played:1, win:1, draw:0, loss:0 },
+      { name:'United States', points:1, played:1, win:0, draw:1, loss:0 },
+      { name:'Türkiye',       points:1, played:1, win:0, draw:1, loss:0 },
+      { name:'Japan',         points:0, played:1, win:0, draw:0, loss:1 },
     ],
   },
   bra_srb: {
-    home: { name:'Brazil',     logo:'https://media.api-sports.io/football/teams/6.png' },
-    away: { name:'Serbia',     logo:'https://media.api-sports.io/football/teams/14.png' },
-    kickoffUTC: Date.UTC(2022,10,24,20,0,0),
-    kickoffStr: 'THURSDAY 24 NOV 07:00 AEST',
-    stage: 'Group Stage',
-    group: 'GROUP G',
+    fixture: {
+      fixtureId: 'demo-bra-srb',
+      home: { name:'Brazil', logo:'https://media.api-sports.io/football/teams/6.png' },
+      away: { name:'Serbia', logo:'https://media.api-sports.io/football/teams/14.png' },
+      kickoffEpoch: Date.UTC(2022,10,24,20,0,0),
+      kickoffStr: 'THURSDAY 24 NOV 07:00 AEST',
+      stage: 'Group Stage',
+      group: 'GROUP G',
+    },
     standings: [
-      { name:'Switzerland',  pts:3, played:1 },
-      { name:'Brazil',       pts:0, played:0 },
-      { name:'Cameroon',     pts:0, played:0 },
-      { name:'Serbia',       pts:0, played:0 },
+      { name:'Switzerland', points:3, played:1, win:1, draw:0, loss:0 },
+      { name:'Brazil',      points:0, played:0, win:0, draw:0, loss:0 },
+      { name:'Cameroon',    points:0, played:0, win:0, draw:0, loss:0 },
+      { name:'Serbia',      points:0, played:0, win:0, draw:0, loss:0 },
     ],
   },
 };
 
+const REFRESH_MS = 5 * 60_000;
+const params = new URLSearchParams(window.location.search);
+let currentMode = params.get('mode') === 'demo' ? 'demo' : 'live';
 let countdownInterval = null;
+let refreshTimer = null;
+
+function setStatus(msg, isError = false) {
+  const el = document.getElementById('api-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = isError ? 'var(--color-red-bright, #f00)' : '#666';
+}
 
 function getStatus(team, all) {
-  const sorted = [...all].sort((a,b) => b.pts - a.pts);
+  const sorted = [...all].sort((a,b) => (b.points ?? 0) - (a.points ?? 0));
   const rank = sorted.findIndex(t => t.name === team.name) + 1;
-  const remaining = 3 - team.played;
-  const maxPts = team.pts + remaining * 3;
-  const p2pts = sorted[1]?.pts ?? 0;
-  if (rank <= 2 && (sorted[3]?.pts + (3-(sorted[3]?.played??0))*3) < team.pts) return 'qualified';
-  if (rank <= 2 && team.played === 3) return 'qualified';
+  const played = team.played ?? 0;
+  const remaining = 3 - played;
+  const maxPts = (team.points ?? 0) + remaining * 3;
+  const p2pts = sorted[1]?.points ?? 0;
+  const lastRemaining = 3 - (sorted[3]?.played ?? 0);
+  const lastMax = (sorted[3]?.points ?? 0) + lastRemaining * 3;
+  if (rank <= 2 && lastMax < (team.points ?? 0)) return 'qualified';
+  if (rank <= 2 && played === 3) return 'qualified';
   if (maxPts <= p2pts && maxPts < 4) return 'eliminated';
-  if (rank === 4 && team.played === 3) return 'eliminated';
+  if (rank === 4 && played === 3) return 'eliminated';
   if (rank === 3) return 'pending';
   return 'contention';
 }
@@ -213,8 +240,12 @@ const STATUS_BG = {
 };
 
 function renderStandings(standings, group) {
-  document.getElementById('group-title').textContent = group;
-  const sorted = [...standings].sort((a,b) => b.pts - a.pts);
+  document.getElementById('group-title').textContent = group || 'GROUP';
+  if (!standings?.length) {
+    document.getElementById('grow-rows').innerHTML = '';
+    return;
+  }
+  const sorted = [...standings].sort((a,b) => (b.points ?? 0) - (a.points ?? 0));
   document.getElementById('grow-rows').innerHTML = sorted.map(team => {
     const status = getStatus(team, standings);
     const bg     = STATUS_BG[status];
@@ -222,36 +253,32 @@ function renderStandings(standings, group) {
     const ptc    = status === 'eliminated' ? 'var(--color-charcoal)' : 'var(--color-yellow-bright)';
     const svg    = getFlagSVG(team.name) || '';
     const uid    = 'sr' + team.name.replace(/\W/g,'').slice(0,6);
-    const mp     = team.played;
-    const w      = team.pts >= 3 ? Math.floor(team.pts/3) : 0;
-    const d      = team.pts === 1 ? 1 : 0;
-    const l      = team.pts === 0 && team.played > 0 ? 1 : 0;
     return `<div class="grow" style="background:${bg};">
       <div class="grow-left">
         <div class="grow-flag"><img id="${uid}" src="${svg}" alt="${team.name}"></div>
         <div class="grow-name" style="color:${tc};">${team.name.toUpperCase()}</div>
       </div>
       <div class="grow-stats">
-        <span style="color:${tc};">${mp}</span>
-        <span style="color:${tc};">${w}</span>
-        <span style="color:${tc};">${d}</span>
-        <span style="color:${tc};">${l}</span>
-        <span style="color:${ptc};">${team.pts}</span>
+        <span style="color:${tc};">${team.played ?? 0}</span>
+        <span style="color:${tc};">${team.win ?? 0}</span>
+        <span style="color:${tc};">${team.draw ?? 0}</span>
+        <span style="color:${tc};">${team.loss ?? 0}</span>
+        <span style="color:${ptc};">${team.points ?? 0}</span>
       </div>
     </div>`;
   }).join('');
-  // Set flags after DOM insert
   setTimeout(() => {
     document.querySelectorAll('.grow-flag img').forEach(img => setFlag(img, img.alt, null));
   }, 0);
 }
 
-function startCountdown(targetUTC) {
+function startCountdown(targetEpoch) {
   if (countdownInterval) clearInterval(countdownInterval);
   function tick() {
-    const ms = targetUTC - Date.now();
     const el = document.getElementById('countdown');
     if (!el) return;
+    if (!Number.isFinite(targetEpoch)) { el.textContent = '00:00:00'; return; }
+    const ms = targetEpoch - Date.now();
     if (ms <= 0) { el.textContent = '00:00:00'; return; }
     const s   = Math.floor(ms/1000);
     const h   = Math.floor(s/3600);
@@ -263,33 +290,92 @@ function startCountdown(targetUTC) {
   countdownInterval = setInterval(tick, 1000);
 }
 
-function render(key) {
-  const s = SCENARIOS[key];
-  // Flags
+function renderData(data) {
+  const f = data.fixture;
   const fh = document.getElementById('flag-home');
   const fa = document.getElementById('flag-away');
-  fh.alt = s.home.name;
-  fa.alt = s.away.name;
-  setFlag(fh, s.home.name, s.home.logo);
-  setFlag(fa, s.away.name, s.away.logo);
-  // Names
-  document.getElementById('name-home').textContent = s.home.name.toUpperCase();
-  document.getElementById('name-away').textContent = s.away.name.toUpperCase();
-  // Meta
-  document.getElementById('stage-label').textContent = s.stage;
-  document.getElementById('kickoff-str').textContent = s.kickoffStr;
-  // Countdown
-  startCountdown(s.kickoffUTC);
-  // Standings
-  renderStandings(s.standings, s.group);
+  fh.alt = f.home.name;
+  fa.alt = f.away.name;
+  setFlag(fh, f.home.name, f.home.logo);
+  setFlag(fa, f.away.name, f.away.logo);
+  document.getElementById('name-home').textContent = (f.home.name || '').toUpperCase();
+  document.getElementById('name-away').textContent = (f.away.name || '').toUpperCase();
+  document.getElementById('stage-label').textContent = f.stage || '–';
+  document.getElementById('kickoff-str').textContent = f.kickoffStr || '–';
+  startCountdown(f.kickoffEpoch);
+  renderStandings(data.standings, f.group);
 }
 
-document.getElementById('scenario-select').addEventListener('change', e => render(e.target.value));
+function apiQuery() {
+  const q = new URLSearchParams();
+  ['team','season','league'].forEach(k => {
+    if (params.get(k)) q.set(k, params.get(k));
+  });
+  return q.toString();
+}
 
-// Boot — read ?scenario= URL param
-const urlParam = new URLSearchParams(window.location.search).get('scenario');
-const bootKey  = urlParam === 'bra_srb' ? 'bra_srb' : 'aus_turkey';
-document.getElementById('scenario-select').value = bootKey;
-render(bootKey);
+async function refreshLive() {
+  try {
+    setStatus('Fetching…');
+    const qs = apiQuery();
+    const url = `/api/upcoming${qs ? '?' + qs : ''}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    renderData(data);
+    const t = new Date(data.fetchedAt).toLocaleTimeString();
+    const note = data.standingsError ? ` · standings: ${data.standingsError}` : '';
+    setStatus(`Live · #${data.fixture.fixtureId} · ${data.fixture.home.name} vs ${data.fixture.away.name} · ${t}${note}`);
+  } catch (err) {
+    setStatus(`Error: ${err.message}`, true);
+    console.error('[coming-up]', err);
+  }
+}
+
+function stopRefresh() {
+  if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+}
+
+function startRefresh() {
+  stopRefresh();
+  refreshLive();
+  refreshTimer = setInterval(refreshLive, REFRESH_MS);
+}
+
+function renderDemo(key) {
+  const s = SCENARIOS[key];
+  if (!s) return;
+  renderData(s);
+  setStatus(`Demo · ${key}`);
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  const scenarioRow = document.getElementById('scenario-row');
+  const modeSelect  = document.getElementById('mode-select');
+  if (modeSelect) modeSelect.value = mode;
+  if (mode === 'live') {
+    if (scenarioRow) scenarioRow.style.display = 'none';
+    startRefresh();
+  } else {
+    stopRefresh();
+    if (scenarioRow) scenarioRow.style.display = 'flex';
+    renderDemo(document.getElementById('scenario-select')?.value || 'aus_turkey');
+  }
+}
+
+document.getElementById('mode-select').addEventListener('change', e => setMode(e.target.value));
+document.getElementById('scenario-select').addEventListener('change', e => {
+  if (currentMode === 'demo') renderDemo(e.target.value);
+});
+
+// Legacy ?scenario= param still selects a demo scenario and forces demo mode
+const scenarioParam = params.get('scenario');
+if (scenarioParam && SCENARIOS[scenarioParam]) {
+  document.getElementById('scenario-select').value = scenarioParam;
+  currentMode = 'demo';
+}
+
+setMode(currentMode);
 </script>
 </body></html>
