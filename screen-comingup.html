@@ -150,8 +150,8 @@ function flagImg(name,size,extra,greyscale){const svg=getFlagSVG(name)||'';const
   <div class="dev-row">
     <div class="dev-lbl">Mode</div>
     <select class="dev-sel" id="mode-select">
-      <option value="live">Live API · next AUS fixture</option>
       <option value="demo">Demo scenario</option>
+      <option value="live">Live API · next AUS fixture</option>
     </select>
   </div>
   <div class="dev-row" id="scenario-row" style="display:none;">
@@ -204,7 +204,7 @@ const SCENARIOS = {
 
 const REFRESH_MS = 5 * 60_000;
 const params = new URLSearchParams(window.location.search);
-let currentMode = params.get('mode') === 'demo' ? 'demo' : 'live';
+let currentMode = params.get('mode') === 'live' ? 'live' : 'demo';
 let countdownInterval = null;
 let refreshTimer = null;
 
@@ -240,11 +240,13 @@ const STATUS_BG = {
 };
 
 function renderStandings(standings, group) {
-  document.getElementById('group-title').textContent = group || 'GROUP';
+  const card = document.getElementById('group-card');
   if (!standings?.length) {
-    document.getElementById('grow-rows').innerHTML = '';
+    if (card) card.style.display = 'none';
     return;
   }
+  if (card) card.style.display = '';
+  document.getElementById('group-title').textContent = group || 'GROUP';
   const sorted = [...standings].sort((a,b) => (b.points ?? 0) - (a.points ?? 0));
   document.getElementById('grow-rows').innerHTML = sorted.map(team => {
     const status = getStatus(team, standings);
@@ -314,6 +316,13 @@ function apiQuery() {
   return q.toString();
 }
 
+function statusLabel(data) {
+  const t = new Date(data.fetchedAt).toLocaleTimeString();
+  const tag = data.resolvedAs === 'next-tournament' ? 'tournament' : (data.resolvedAs || 'live');
+  const note = data.standingsError ? ` · standings: ${data.standingsError}` : '';
+  return `Live · ${tag} · #${data.fixture.fixtureId} · ${data.fixture.home.name} vs ${data.fixture.away.name} · ${t}${note}`;
+}
+
 async function refreshLive() {
   try {
     setStatus('Fetching…');
@@ -323,9 +332,7 @@ async function refreshLive() {
     const data = await res.json();
     if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
     renderData(data);
-    const t = new Date(data.fetchedAt).toLocaleTimeString();
-    const note = data.standingsError ? ` · standings: ${data.standingsError}` : '';
-    setStatus(`Live · #${data.fixture.fixtureId} · ${data.fixture.home.name} vs ${data.fixture.away.name} · ${t}${note}`);
+    setStatus(statusLabel(data));
   } catch (err) {
     setStatus(`Error: ${err.message}`, true);
     console.error('[coming-up]', err);
